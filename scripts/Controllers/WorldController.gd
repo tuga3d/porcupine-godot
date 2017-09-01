@@ -12,6 +12,6 @@ func _ready():
 
 func _update_level():
 	# update cells type
-	for x in range(world.width):
-		for y in range(world.height):
+	for x in range(world.size.x):
+		for y in range(world.size.y):
 			tilemap.set_cell(x, y, world.get_tile_at(x, y).get_tile_type())

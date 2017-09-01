@@ -3,7 +3,7 @@ extends Node2D
 export(Texture) var preview_texture
 
 onready var camera = $camera
-onready var world = $"../world_controller"
+onready var world_controller = $"../world_controller"
 
 var zoom_factor = Vector2(0.05, 0.05)
 var zoom_limits = Rect2(Vector2(0.1, 0.1), Vector2(3.0, 3.0))
@@ -12,9 +12,15 @@ var box_selecting = false
 var selected_area = Rect2()
 var selection_border = Color(0.5, 0.5, 0.5, 1)
 var selection_fill = Color(0.5, 0.5, 0.5, 0.2)
+var build_mode_tile
+
+func _ready():
+	$"../UI/VBoxContainer/build_floor".connect("pressed", self, "_on_build_floor_pressed")
+	$"../UI/VBoxContainer/bulldoze".connect("pressed", self, "_on_bulldoze_pressed")
+	build_mode_tile = world_controller.world.Tile.TILETYPE.Floor
 
 
-func _input(event):
+func _unhandled_input(event):
 	if event is InputEventMouseButton:
 		var button = event.get_button_index()
 		if event.is_pressed():
@@ -31,7 +37,7 @@ func _input(event):
 			dragging = false
 			box_selecting = false
 			if selected_area:
-				test_select()
+				change_tiles()
 
 	if event is InputEventMouseMotion:
 		if dragging:
@@ -55,11 +61,11 @@ func _draw():
 		draw_rect(selection, selection_border, false)
 		
 		# draw preview images
-		var begin = world.tilemap.world_to_map(selection.position)
-		var end = world.tilemap.world_to_map(selection.end)
+		var begin = world_controller.tilemap.world_to_map(selection.position)
+		var end = world_controller.tilemap.world_to_map(selection.end)
 		for x in range(min(begin.x, end.x), max(begin.x, end.x) + 1):
 			for y in range(min(begin.y, end.y), max(begin.y, end.y) + 1):
-				draw_texture(preview_texture, world.tilemap.map_to_world(Vector2(x,y)))
+				draw_texture(preview_texture, world_controller.tilemap.map_to_world(Vector2(x,y)))
 
 
 func camera_zoom(factor):
@@ -76,17 +82,25 @@ func camera_zoom(factor):
 		camera.offset = new_offset
 
 
-func test_select():
+func change_tiles():
 	# compensate for camera zoom and offset
 	var coord1 = selected_area.position * camera.zoom + camera.offset
 	var coord2 = selected_area.end * camera.zoom + camera.offset
 	# get tilemap coords
-	coord1 = world.tilemap.world_to_map(coord1)
-	coord2 = world.tilemap.world_to_map(coord2)
+	coord1 = world_controller.tilemap.world_to_map(coord1)
+	coord2 = world_controller.tilemap.world_to_map(coord2)
 
 	print("Tiles selected:\nFrom: ", coord1, "\nTo: ", coord2)
 	# change cells value
 	for x in range(min(coord1.x, coord2.x), max(coord1.x, coord2.x) + 1):
 		for y in range(min(coord1.y, coord2.y), max(coord1.y, coord2.y) + 1):
-			world.tilemap.set_cell(x, y, 0)
+			world_controller.tilemap.set_cell(x, y, build_mode_tile)
 	update()
+
+
+func _on_build_floor_pressed():
+	build_mode_tile = world_controller.world.Tile.TILETYPE.Floor
+
+
+func _on_bulldoze_pressed():
+	build_mode_tile = world_controller.world.Tile.TILETYPE.Empty

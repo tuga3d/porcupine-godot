@@ -1,24 +1,22 @@
 var Tile = load("res://scripts/Models/Tile.gd")
 var level = []
-var width
-var height
+var size = Vector2()
 
 
-func _init(_width=100, _height=100):
-	width = _width
-	height = _height
+func _init(_size=Vector2(100, 100)):
+	size = _size
 
 	# fill level array with tile objects
-	for x in range(width):
+	for x in range(size.x):
 		var _temp = []
-		for y in range(height):
-			_temp.append(Tile.new(self, x, y))
+		for y in range(size.y):
+			_temp.append(Tile.new(self, Vector2(x, y)))
 		level.append(_temp)
 
 
 func randomize_tiles():
-	for x in range(width):
-		for y in range(height):
+	for x in range(size.x):
+		for y in range(size.y):
 			if randi() % 2 == 0:
 				level[x][y].set_tile_type(Tile.TILETYPE.Empty)
 			else:
@@ -26,7 +24,7 @@ func randomize_tiles():
 
 
 func get_tile_at(x, y):
-	if x > width or x < 0 or y > height or y < 0:
+	if x > size.x or x < 0 or y > size.y or y < 0:
 		print("Tile %d, %d is out of range." % [x, y])
 		return null
 	return level[x][y]
